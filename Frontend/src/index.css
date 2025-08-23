@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* index.css */
+.eco-mode {
+    background-color: #0d1f16;
+    color: #a8ffb3;
+    transition: all 0.3s ease-in-out;
+    filter: brightness(0.8); /* Simulates reduced screen brightness */
+  }
+  
+  .eco-mode img,
+  .eco-mode video,
+  .eco-mode canvas {
+    filter: brightness(0.7) contrast(0.9);
+  }
+  
+
+  /* Add this to your global CSS or in the Features.jsx file's <style> tag */
+@keyframes sparkle {
+  0% {
+    transform: scale(0.5) translateY(-50%);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5) translateY(50%);
+    opacity: 0.2;
+  }
+}
+
+.sparkle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff, #d4f7ff);
+  animation: sparkle 1.5s infinite ease-in-out;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sparkle:nth-child(even) {
+  animation-delay: 0.5s;
+}
+
+.sparkle:nth-child(odd) {
+  animation-delay: 1s;
+}
+
+.sparkle-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+@keyframes float-delay {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-25px) rotate(-2deg); }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-delay {
+  animation: float-delay 10s ease-in-out infinite 2s;
+}
+
+@keyframes particle-move {
+  0% { transform: translateY(0) translateX(0); }
+  100% { transform: translateY(-100vh) translateX(20px); }
+}
+
+.particle {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: particle-move linear infinite;
+  pointer-events: none;
+}
