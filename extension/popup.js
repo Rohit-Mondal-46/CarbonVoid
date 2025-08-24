@@ -1,19 +1,91 @@
 
-
 // popup.js
-
 // Global variables
-let unreadCount = 42;
-const goal = 20; // Daily goal for unread emails
+let unreadCount = 0;
+let goal = 20; // Daily goal for unread emails
 let refreshInterval;
+let isAuthenticated = false;
 
 // DOM Content Loaded event
 document.addEventListener('DOMContentLoaded', function() {
-  initializeTabs();
-  initializeUI();
-  setupEventListeners();
-  startPeriodicUpdates();
+  checkAuthStatus();
 });
+
+// Check authentication status
+function checkAuthStatus() {
+  chrome.runtime.sendMessage(
+    { type: "checkAuthStatus" },
+    (response) => {
+      isAuthenticated = response.authenticated;
+      if (isAuthenticated) {
+        showAppUI();
+        initializeTabs();
+        initializeUI();
+        setupEventListeners();
+        startPeriodicUpdates();
+      } else {
+        showAuthUI();
+        setupAuthEventListeners();
+      }
+    }
+  );
+}
+
+// Show authentication UI
+function showAuthUI() {
+  document.getElementById('authUI').classList.remove('hidden');
+  document.getElementById('appUI').classList.add('hidden');
+}
+
+// Show main app UI
+function showAppUI() {
+  document.getElementById('authUI').classList.add('hidden');
+  document.getElementById('appUI').classList.remove('hidden');
+  updateStatus('Active', '#10b981');
+}
+
+// Set up authentication event listeners
+function setupAuthEventListeners() {
+  const authBtn = document.getElementById('googleAuthBtn');
+  const errorMessage = document.getElementById('errorMessage');
+  
+  authBtn.addEventListener('click', function() {
+    // Show loading state
+    authBtn.innerHTML = '<div class="loading-spinner"></div> Authenticating...';
+    authBtn.disabled = true;
+    errorMessage.style.display = 'none';
+    
+    // Authenticate with Google
+    chrome.runtime.sendMessage(
+      { type: "authenticate" },
+      (response) => {
+        if (response.success) {
+          isAuthenticated = true;
+          showAppUI();
+          initializeTabs();
+          initializeUI();
+          setupEventListeners();
+          startPeriodicUpdates();
+          handleRefresh(); // Fetch data immediately after auth
+        } else {
+          // Auth failed
+          authBtn.innerHTML = `
+            <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Sign in with Google
+          `;
+          authBtn.disabled = false;
+          errorMessage.style.display = 'block';
+          errorMessage.textContent = response.error || 'Authentication failed. Please try again.';
+        }
+      }
+    );
+  });
+}
 
 // Initialize tab functionality
 function initializeTabs() {
@@ -42,6 +114,7 @@ function initializeTabs() {
 // Initialize UI with data
 function initializeUI() {
   updateUI();
+  loadSettings();
 }
 
 // Set up event listeners
@@ -65,6 +138,11 @@ function setupEventListeners() {
 
 // Handle refresh button click
 function handleRefresh() {
+  if (!isAuthenticated) {
+    alert('Please authenticate with Google first');
+    return;
+  }
+  
   const btn = document.getElementById('refreshBtn');
   const originalText = btn.innerHTML;
   
@@ -73,23 +151,33 @@ function handleRefresh() {
   btn.disabled = true;
   document.body.classList.add('loading');
   
-  // Simulate API call delay
-  setTimeout(() => {
-    fetchEmailData()
-      .then(() => {
-        updateUI();
-      })
-      .catch(error => {
-        console.error('Error refreshing data:', error);
+  // Get unread count from background script
+  chrome.runtime.sendMessage(
+    { type: "getUnreadCount" },
+    (response) => {
+      if (response.error) {
+        console.error('Error fetching unread count:', response.error);
         updateStatus('Error', '#ef4444');
-      })
-      .finally(() => {
-        // Reset button
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        document.body.classList.remove('loading');
-      });
-  }, 1500);
+        alert('Error fetching emails: ' + response.error);
+        
+        // If it's an auth error, show auth UI again
+        if (response.error.includes('auth') || response.error.includes('401')) {
+          isAuthenticated = false;
+          showAuthUI();
+          setupAuthEventListeners();
+        }
+      } else {
+        unreadCount = response.count;
+        updateUI();
+        updateStatus('Updated', '#10b981');
+      }
+      
+      // Reset button
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      document.body.classList.remove('loading');
+    }
+  );
 }
 
 // Handle view report button click
@@ -109,6 +197,9 @@ function handleCustomizeGoals() {
     goal = parseInt(newGoal);
     document.getElementById('dailyGoalBadge').textContent = `${goal} emails`;
     updateUI();
+    
+    // Save to storage
+    chrome.storage.local.set({ goal: goal });
   }
 }
 
@@ -119,6 +210,9 @@ function handleAutoRefreshToggle(event) {
   } else {
     stopPeriodicUpdates();
   }
+  
+  // Save setting to storage
+  chrome.storage.local.set({ autoRefresh: event.target.checked });
 }
 
 // Handle dark mode toggle
@@ -134,19 +228,9 @@ function handleDarkModeToggle(event) {
     document.body.style.background = '#f4f6f9';
     document.body.style.color = '#374151';
   }
-}
-
-// Fetch email data (simulated)
-function fetchEmailData() {
-  return new Promise((resolve) => {
-    // Simulate API call
-    setTimeout(() => {
-      // Randomly increase or decrease unread count
-      const change = Math.floor(Math.random() * 10) - 3; // -3 to +6
-      unreadCount = Math.max(0, unreadCount + change);
-      resolve(unreadCount);
-    }, 800);
-  });
+  
+  // Save setting to storage
+  chrome.storage.local.set({ darkMode: event.target.checked });
 }
 
 // Update the UI with current data
@@ -168,9 +252,6 @@ function updateUI() {
   document.getElementById('lastUpdated').textContent = 
     `Last updated: ${now.toLocaleTimeString()}`;
   
-  // Update status
-  updateStatus('Active', '#10b981');
-  
   // Update category badges with mock data
   updateCategoryBadges();
 }
@@ -178,8 +259,10 @@ function updateUI() {
 // Update status badge
 function updateStatus(status, color) {
   const statusBadge = document.getElementById('statusBadge');
-  statusBadge.textContent = status;
-  statusBadge.style.background = color;
+  if (statusBadge) {
+    statusBadge.textContent = status;
+    statusBadge.style.background = color;
+  }
 }
 
 // Update category badges
@@ -220,13 +303,11 @@ function startPeriodicUpdates() {
   stopPeriodicUpdates();
   
   // Set up new interval only if auto-refresh is enabled
-  if (document.getElementById('autoRefresh').checked) {
+  const autoRefreshCheckbox = document.getElementById('autoRefresh');
+  if (autoRefreshCheckbox && autoRefreshCheckbox.checked) {
     refreshInterval = setInterval(() => {
-      // Random small changes to unread count
-      const change = Math.floor(Math.random() * 5) - 2; // -2 to +2
-      unreadCount = Math.max(0, unreadCount + change);
-      updateUI();
-    }, 10000);
+      handleRefresh();
+    }, 5 * 60 * 1000); // 5 minutes
   }
 }
 
@@ -238,4 +319,33 @@ function stopPeriodicUpdates() {
   }
 }
 
-
+// Load saved settings
+function loadSettings() {
+  chrome.storage.local.get(['goal', 'autoRefresh', 'darkMode'], (result) => {
+    if (result.goal) {
+      goal = result.goal;
+      const dailyGoalBadge = document.getElementById('dailyGoalBadge');
+      if (dailyGoalBadge) {
+        dailyGoalBadge.textContent = `${goal} emails`;
+      }
+    }
+    
+    if (result.autoRefresh !== undefined) {
+      const autoRefreshCheckbox = document.getElementById('autoRefresh');
+      if (autoRefreshCheckbox) {
+        autoRefreshCheckbox.checked = result.autoRefresh;
+        if (result.autoRefresh) {
+          startPeriodicUpdates();
+        }
+      }
+    }
+    
+    if (result.darkMode) {
+      const darkModeCheckbox = document.getElementById('darkMode');
+      if (darkModeCheckbox) {
+        darkModeCheckbox.checked = result.darkMode;
+        handleDarkModeToggle({ target: { checked: result.darkMode } });
+      }
+    }
+  });
+}
