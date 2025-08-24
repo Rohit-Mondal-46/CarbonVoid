@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CarbonVoid Gmail Monitor</title>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary: #10b981;
+      --gray-light: #f4f6f9;
+      --gray: #6b7280;
+      --gray-dark: #374151;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--gray-light);
+      width: 360px;
+      color: var(--gray-dark);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 15px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      text-align: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      position: relative;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .status-badge {
+      position: absolute;
+      top: 12px;
+      right: 15px;
+      background: var(--secondary);
+      color: white;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      background: white;
+      padding: 0 15px;
+    }
+    
+    .tab {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--gray);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .card {
+      background: white;
+      margin: 15px;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-3px);
+    }
+    
+    .stat-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .stat {
+      font-size: 40px;
+      font-weight: bold;
+      color: var(--primary-dark);
+      margin: 10px 0;
+    }
+    
+    .label {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .label-icon {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--secondary);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    
+    .carbon-impact {
+      background: #f0f9ff;
+      border-left: 4px solid var(--secondary);
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .carbon-impact h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: var(--gray-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .carbon-stat {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--secondary);
+    }
+    
+    .category {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .category:last-child {
+      border-bottom: none;
+    }
+    
+    .category-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    
+    .category-badge {
+      background: #f3f4f6;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: var(--primary);
+      border: 1px solid #e5e7eb;
+    }
+    
+    .btn-secondary:hover {
+      background: #f9fafb;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 12px;
+      color: var(--gray);
+      background: white;
+      border-top: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    .last-updated {
+      font-size: 11px;
+      color: var(--gray);
+      text-align: right;
+      margin: 5px 15px 0;
+    }
+    
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+    
+    .setting-label {
+      font-size: 14px;
+    }
+    
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+    
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    /* Authentication UI */
+    .auth-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      height: 300px;
+    }
+    
+    .auth-card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+    }
+    
+    .auth-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: var(--primary);
+    }
+    
+    .auth-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--gray-dark);
+    }
+    
+    .auth-description {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+    
+    .btn-google {
+      background: white;
+      color: #757575;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .btn-google:hover {
+      background: #f8f9fa;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .google-icon {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .privacy-note {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 20px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    
+    .error-message {
+      background: #fef2f2;
+      color: var(--danger);
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 13px;
+      display: none;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Authentication UI (shown by default) -->
+  <div id="authUI">
+    <div class="header">
+      <h1><span class="label-icon">INBOX</span> CarbonVoid Mail</h1>
+    </div>
+    
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-icon">📧</div>
+        <h2 class="auth-title">Connect Your Gmail</h2>
+        <p class="auth-description">CarbonVoid needs access to your Gmail to analyze your unread emails and calculate your carbon footprint impact.</p>
+        
+        <button id="googleAuthBtn" class="btn btn-google">
+          <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Sign in with Google
+        </button>
+        
+        <div id="errorMessage" class="error-message">
+          Authentication failed. Please try again.
+        </div>
+        
+        <p class="privacy-note">We only request read-only access to your Gmail to count unread emails. We never store your emails or personal data.</p>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <span class="label-icon">ECO</span> Declutter inbox → Reduce carbon footprint
+    </div>
+  </div>
+
+  <!-- Main App UI (hidden by default) -->
+  <div id="appUI" class="hidden">
+    <div class="header">
+      <h1><span class="label-icon">INBOX</span> CarbonVoid Mail</h1>
+      <div class="status-badge" id="statusBadge">Active</div>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard">Dashboard</div>
+      <div class="tab" data-tab="categories">Categories</div>
+      <div class="tab" data-tab="settings">Settings</div>
+    </div>
+    
+    <!-- Dashboard Tab -->
+    <div class="tab-content active" id="dashboardTab">
+      <div class="card">
+        <div class="label">
+          <span class="label-icon">UNREAD:</span> Unread Emails
+        </div>
+        <div class="stat-container">
+          <div id="unreadCount" class="stat">--</div>
+          <div class="carbon-impact">
+            <h3><span class="label-icon">CO2:</span> Carbon Impact</h3>
+            <div id="carbonStat" class="carbon-stat">--</div>
+          </div>
+        </div>
+        
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="label">
+          <span class="label-icon">GOAL:</span> 
+          <span id="progressText">0% towards your goal</span>
+        </div>
+        
+        <button id="refreshBtn" class="btn">
+          <span class="label-icon">REFRESH</span> Refresh
+        </button>
+      </div>
+      
+      <div class="card">
+        <div class="label">
+          <span class="label-icon">STATS:</span> Weekly Summary
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">PRI:</span> Primary
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">PROMO:</span> Promotions
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">SOC:</span> Social
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+        
+        <button class="btn-secondary" id="viewReportBtn">
+          <span class="label-icon">VIEW</span> View Detailed Report
+        </button>
+      </div>
+    </div>
+    
+    <!-- Categories Tab -->
+    <div class="tab-content" id="categoriesTab">
+      <div class="card">
+        <div class="label">
+          <span class="label-icon">CAT:</span> Email Categories
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">PRI:</span> Primary
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">PROMO:</span> Promotions
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">SOC:</span> Social
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">UPD:</span> Updates
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <span class="label-icon">FOR:</span> Forums
+          </div>
+          <div class="category-badge">--</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="label">
+          <span class="label-icon">SAVE:</span> Carbon Savings Potential
+        </div>
+        <div class="carbon-stat">-- g CO₂</div>
+        <div class="label">By unsubscribing from promotional emails</div>
+        
+        <button class="btn" id="analyzeBtn">
+          <span class="label-icon">ANALYZE</span> Analyze Subscription Impact
+        </button>
+      </div>
+    </div>
+    
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settingsTab">
+      <div class="card">
+        <div class="label">
+          <span class="label-icon">SETTINGS:</span> Extension Settings
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">Auto-refresh every 5 minutes</div>
+          <label class="switch">
+            <input type="checkbox" id="autoRefresh" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">Show desktop notifications</div>
+          <label class="switch">
+            <input type="checkbox" id="desktopNotifications" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">Track carbon impact</div>
+          <label class="switch">
+            <input type="checkbox" id="trackCarbon" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">Dark mode</div>
+          <label class="switch">
+            <input type="checkbox" id="darkMode">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="label">
+          <span class="label-icon">TARGETS:</span> Goals & Targets
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">Daily unread goal</div>
+          <div class="category-badge" id="dailyGoalBadge">20 emails</div>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">Weekly carbon reduction</div>
+          <div class="category-badge" id="carbonGoalBadge">50g CO₂</div>
+        </div>
+        
+        <button class="btn-secondary" id="customizeGoalsBtn">
+          <span class="label-icon">EDIT</span> Customize Goals
+        </button>
+      </div>
+    </div>
+    
+    <div class="last-updated" id="lastUpdated">
+      Last updated: --
+    </div>
+    
+    <div class="footer">
+      <span class="label-icon">ECO</span> Declutter inbox → Reduce carbon footprint
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

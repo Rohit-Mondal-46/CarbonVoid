@@ -27,7 +27,7 @@ app.use((err, req, res, next) => {
 app.use(
   cors({
     origin: [
-      'chrome-extension://efblchoephakkkdnedekllohlnfdaffp', // from `chrome://extensions`
+      'chrome-extension://knlpkbjmcaejnlidhefojemkkpbfncig', // from `chrome://extensions`
       'http://localhost:5173' // dev frontend
     ],
     credentials: true
