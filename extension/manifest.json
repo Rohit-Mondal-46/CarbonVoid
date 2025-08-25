@@ -1,16 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "CarboVoid-Your Digital Carbon Emission Detector",
+  "name": "CarbonVoid",
   "version": "1.0",
-  "description": "Counts unread Gmail emails to estimate carbon footprint.",
+  "description": "Counts unread Gmail emails to estimate carbon footprint and monitors digital activities.",
   "permissions": [
     "identity",
     "storage",
     "tabs",
     "activeTab",
-    "scripting"
+    "scripting",
+    "sidePanel"
   ],
-   "host_permissions": [
+  "host_permissions": [
     "https://*.youtube.com/*",
     "https://*.netflix.com/*",
     "https://*.zoom.us/*",
@@ -29,9 +30,11 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html"
+    "default_title": "Open CarbonVoid Sidepanel"
   },
-
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
   "content_scripts": [
     {
       "matches": [
