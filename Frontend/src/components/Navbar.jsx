@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useUser, useAuth, SignedIn, SignedOut, SignOutButton } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -8,54 +8,6 @@ const Navbar = () => {
   const { isLoaded, user } = useUser();
   const { login } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncError, setSyncError] = useState(null);
-
-  // Function to send user data to backend
-  const sendUserToBackend = async (currentUser) => {
-    if (!currentUser || !isLoaded) return;
-    
-    setIsSyncing(true);
-    setSyncError(null);
-
-    try {
-      const userData = {
-        userId: currentUser.id,
-        name: currentUser.name || 'Anonymous',
-        email: currentUser.email,
-        password: null
-      };
-
-      const response = await fetch('http://localhost:3000/api/user/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify(userData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to sync user data');
-      }
-      
-      const data = await response.json();
-      console.log('User synced successfully:', data);
-    } catch (error) {
-      console.error('Error syncing user:', error);
-      setSyncError(error.message);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Sync user data when user changes
-  useEffect(() => {
-    if (isLoaded && user) {
-      sendUserToBackend(user);
-    }
-  }, [isLoaded, user]);
 
   return (
     <motion.nav
@@ -83,12 +35,6 @@ const Navbar = () => {
         <div className="hidden md:flex items-center space-x-4">
           <SignedIn>
             <div className="flex items-center space-x-4">
-              {isSyncing && (
-                <span className="text-yellow-400 text-sm">Syncing...</span>
-              )}
-              {syncError && (
-                <span className="text-red-400 text-sm">{syncError}</span>
-              )}
               <span className="text-green-400 font-medium">
                 Welcome, {user?.name || 'User'}
               </span>
@@ -136,12 +82,6 @@ const Navbar = () => {
         >
           <SignedIn>
             <div className="flex flex-col space-y-2">
-              {isSyncing && (
-                <span className="text-yellow-400 text-sm">Syncing...</span>
-              )}
-              {syncError && (
-                <span className="text-red-400 text-sm">{syncError}</span>
-              )}
               <span className="text-green-400 font-medium">
                 Welcome, {user?.name || 'User'}
               </span>
