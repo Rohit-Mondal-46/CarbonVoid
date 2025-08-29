@@ -1,19 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const {
-  googleAuth,
+  getGoogleAuthUrl,
+  googleCallback,
   getProfile,
+  refreshAccessToken,
+  getGmailToken,
+  getExtensionAuth,
   logout
 } = require('../controllers/authController');
 const { authenticateUser } = require('../middleware/auth');
 
-// Google authentication endpoint
-router.post('/google', googleAuth);
+// Google OAuth endpoints
+router.get('/google', getGoogleAuthUrl);
+router.get('/google/callback', googleCallback);
 
-// Protected route example
-router.get('/profile', authenticateUser, getProfile);
+// Extension auth bridge - redirect to the frontend bridge page
+router.get('/extension-auth-bridge', (req, res) => {
+  res.redirect(`${process.env.FRONTEND_URL}/extension-auth.html`);
+});
 
-// Logout endpoint
+// Protected routes
+router.get('/me', authenticateUser, getProfile);
+router.get('/extension-auth', authenticateUser, getExtensionAuth);
+router.get('/gmail-token', authenticateUser, getGmailToken);
+router.post('/refresh', refreshAccessToken);
 router.post('/logout', authenticateUser, logout);
 
 module.exports = router;

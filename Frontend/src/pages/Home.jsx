@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useUser } from "../contexts/AuthContext";
 import {
   motion,
   useAnimation,
@@ -436,34 +436,7 @@ const Home = () => {
               transition={{ delay: 0.7 }}
               className="flex flex-col sm:flex-row justify-center gap-4 mb-12"
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                <Link
-                  to="/sign-in"
-                  className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-full hover:shadow-lg hover:shadow-green-500/30 transition-all duration-300 font-medium"
-                >
-                  Sign In
-                </Link>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                <Link
-                  to="/sign-up"
-                  className="inline-block border-2 border-emerald-400 text-emerald-400 px-8 py-3 rounded-full hover:bg-emerald-900/30 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 font-medium"
-                >
-                  Sign Up
-                </Link>
-              </motion.div>
+             
             </motion.div>
           </SignedOut>
 

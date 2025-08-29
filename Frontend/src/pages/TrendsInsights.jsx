@@ -10,7 +10,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import { useUser } from '@clerk/clerk-react';
+import { useUser } from '../contexts/AuthContext';
 import axios from 'axios';
 
 // Register ChartJS components

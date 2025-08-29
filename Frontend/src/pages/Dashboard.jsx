@@ -4,7 +4,7 @@ import { Line } from "react-chartjs-2";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { motion } from "framer-motion";
-import { useUser, useAuth } from "@clerk/clerk-react";
+import { useUser, useAuth } from "../contexts/AuthContext";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -71,7 +71,6 @@ const generateRandomReport = (activities) => {
 
 const Dashboard = () => {
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
   const [logs, setLogs] = useState([]);
   const [carbonReport, setCarbonReport] = useState(null);
   const [loading, setLoading] = useState({
@@ -92,13 +91,10 @@ const Dashboard = () => {
       setError(null);
 
       try {
-        const token = await getToken();
         const response = await axios.get(
           `http://localhost:3000/api/activity/activities/${user.id}/footprint`,
           {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            withCredentials: true // This will include cookies
           }
         );
         
@@ -124,7 +120,7 @@ const Dashboard = () => {
     };
 
     fetchUserFootprint();
-  }, [isLoaded, user, getToken]);
+  }, [isLoaded, user]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -148,14 +144,11 @@ const Dashboard = () => {
         const report = generateRandomReport(logs);
         setCarbonReport(report);
       } else {
-        const token = await getToken();
         const response = await axios.post(
           `http://localhost:3000/api/reports/${user.id}`,
           { userId: user.id },
           {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            withCredentials: true // Include cookies for authentication
           }
         );
         setCarbonReport(response.data.report);

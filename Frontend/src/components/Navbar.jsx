@@ -1,39 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { useUser, useAuth, SignedIn, SignedOut, SignOutButton } from '@clerk/clerk-react';
+import { useUser, useAuth, SignedIn, SignedOut, SignOutButton } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Navbar = () => {
   const { isLoaded, user } = useUser();
-  const { getToken } = useAuth();
+  const { login } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(null);
 
   // Function to send user data to backend
-  const sendUserToBackend = async (clerkUser) => {
-    if (!clerkUser || !isLoaded) return;
+  const sendUserToBackend = async (currentUser) => {
+    if (!currentUser || !isLoaded) return;
     
     setIsSyncing(true);
     setSyncError(null);
 
     try {
       const userData = {
-        userId: clerkUser.id,
-        name: clerkUser.fullName || clerkUser.username || 'Anonymous',
-        email: clerkUser.primaryEmailAddress?.emailAddress,
+        userId: currentUser.id,
+        name: currentUser.name || 'Anonymous',
+        email: currentUser.email,
         password: null
       };
-
-      const token = await getToken();
 
       const response = await fetch('http://localhost:3000/api/user/sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify(userData)
       });
 
@@ -92,7 +90,7 @@ const Navbar = () => {
                 <span className="text-red-400 text-sm">{syncError}</span>
               )}
               <span className="text-green-400 font-medium">
-                Welcome, {user?.firstName || user?.username || 'User'}
+                Welcome, {user?.name || 'User'}
               </span>
               <SignOutButton>
                 <button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition duration-300 ease-in-out">
@@ -103,12 +101,12 @@ const Navbar = () => {
           </SignedIn>
 
           <SignedOut>
-            <Link
-              to="/sign-in"
+            <button
+              onClick={login}
               className="bg-green-500 text-black px-4 py-2 rounded hover:bg-green-400 hover:text-white transition duration-300 ease-in-out font-medium"
             >
-              Signup/Login
-            </Link>
+              Login with Google
+            </button>
           </SignedOut>
         </div>
 
@@ -145,7 +143,7 @@ const Navbar = () => {
                 <span className="text-red-400 text-sm">{syncError}</span>
               )}
               <span className="text-green-400 font-medium">
-                Welcome, {user?.firstName || user?.username || 'User'}
+                Welcome, {user?.name || 'User'}
               </span>
             </div>
           </SignedIn>
@@ -165,12 +163,12 @@ const Navbar = () => {
           </SignedIn>
 
           <SignedOut>
-            <Link
-              to="/sign-in"
+            <button
+              onClick={login}
               className="bg-green-500 text-black px-4 py-2 rounded hover:bg-green-400 hover:text-white transition duration-300 ease-in-out font-medium text-center"
             >
-              Signup/Login
-            </Link>
+              Login with Google
+            </button>
           </SignedOut>
         </motion.div>
       )}

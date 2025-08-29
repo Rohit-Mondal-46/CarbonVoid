@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+require('dotenv').config();
 
 const userRoutes = require('./routes/userRoute');
 const activityRoutes = require('./routes/activityRoute');
@@ -12,11 +14,12 @@ const activitystateRoutes = require('./routes/activitystateRoute');
 const auth = require('./routes/auth');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -27,8 +30,8 @@ app.use((err, req, res, next) => {
 app.use(
   cors({
     origin: [
-      'chrome-extension://knlpkbjmcaejnlidhefojemkkpbfncig', // from `chrome://extensions`
-      'http://localhost:5173' // dev frontend
+      'chrome-extension://kciibllgbikahmmopnakkipghfhbpclj', 
+      'http://localhost:5173' 
     ],
     credentials: true
     

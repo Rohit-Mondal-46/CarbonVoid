@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarbonVoid - Digital Carbon Footprint Monitor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary: #10b981;
+      --accent: #8b5cf6;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #1f2937;
+      --light: #f9fafb;
+      --gray: #6b7280;
+      --gray-light: #e5e7eb;
+      --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --sidepanel-width: 400px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      width: var(--sidepanel-width);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .container {
+      padding: 0 15px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      position: relative;
+      margin-bottom: 15px;
+      flex-shrink: 0;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .status-badge {
+      position: absolute;
+      top: 12px;
+      right: 15px;
+      background: var(--secondary);
+      color: white;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    
+    /* Navigation */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 12px;
+      margin: 0 15px 20px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--gray);
+      text-align: center;
+      transition: all 0.2s ease;
+      border-bottom: 2px solid transparent;
+    }
+    
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .tab i {
+      margin-right: 6px;
+    }
+    
+    /* Content Sections */
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Cards */
+    .card {
+      background: white;
+      margin: 0 15px 15px;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.2s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-3px);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* Stats */
+    .stat-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .stat {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--primary-dark);
+    }
+    
+    .carbon-impact {
+      background: #f0f9ff;
+      border-left: 4px solid var(--secondary);
+      padding: 12px 15px;
+      border-radius: 8px;
+    }
+    
+    .carbon-stat {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--secondary);
+    }
+    
+    /* Progress Bar */
+    .progress-container {
+      margin: 15px 0;
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--gray);
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--secondary);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    
+    /* Categories */
+    .category {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .category:last-child {
+      border-bottom: none;
+    }
+    
+    .category-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    
+    .category-badge {
+      background: #f3f4f6;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      min-width: 30px;
+      text-align: center;
+    }
+    
+    /* Buttons */
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: var(--primary);
+      border: 1px solid #e5e7eb;
+    }
+    
+    .btn-secondary:hover {
+      background: #f9fafb;
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+    }
+    
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 12px;
+      color: var(--gray);
+      background: white;
+      border-top: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+      flex-shrink: 0;
+    }
+    
+    /* Streaming specific styles */
+    .streaming-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .streaming-stat {
+      text-align: center;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 12px;
+    }
+    
+    .streaming-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    
+    .streaming-label {
+      font-size: 12px;
+      color: var(--gray);
+    }
+    
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .platform-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .platform-item:hover {
+      background: #e0e7ff;
+      transform: translateY(-2px);
+    }
+    
+    .platform-item.active {
+      background: #dbeafe;
+      border: 2px solid var(--primary);
+    }
+    
+    .platform-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      color: white;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    
+    /* Live monitoring */
+    .live-session {
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+    
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .live-badge {
+      background: #ef4444;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    
+    .session-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    
+    .session-stat {
+      text-align: center;
+      padding: 8px;
+      background: white;
+      border-radius: 8px;
+    }
+    
+    /* Suggestions */
+    .suggestions {
+      margin-top: 15px;
+    }
+    
+    .suggestion-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .suggestion-icon {
+      font-size: 16px;
+      color: var(--secondary);
+      flex-shrink: 0;
+    }
+    
+    .suggestion-content {
+      flex: 1;
+    }
+    
+    .suggestion-content strong {
+      color: #166534;
+      display: block;
+      margin-bottom: 4px;
+    }
+    
+    .suggestion-content p {
+      margin: 0;
+      font-size: 0.9em;
+      color: #4d7c0f;
+    }
+    
+    /* Settings */
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+    
+    .setting-label {
+      font-size: 14px;
+      color: var(--dark);
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--secondary);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Scrollbar styling for sidepanel */
+    .container::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    .container::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    
+    .container::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+
+    /* Authentication UI Styles */
+    .hidden {
+      display: none !important;
+    }
+
+    .auth-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+      max-width: 300px;
+      width: 100%;
+    }
+
+    .auth-header {
+      margin-bottom: 25px;
+    }
+
+    .auth-icon {
+      font-size: 48px;
+      color: var(--secondary);
+      margin-bottom: 15px;
+    }
+
+    .auth-header h2 {
+      font-size: 20px;
+      color: var(--dark);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .auth-header p {
+      color: var(--gray);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .google-auth-btn {
+      width: 100%;
+      background: white;
+      border: 2px solid #dadce0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #3c4043;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .google-auth-btn:hover {
+      background: #f8f9fa;
+      border-color: #b8bcc0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .google-auth-btn:active {
+      transform: translateY(0);
+    }
+
+    .google-auth-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .google-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .loading-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .error-message {
+      background: #fef2f2;
+      color: #dc2626;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 15px;
+      border: 1px solid #fecaca;
+    }
+
+    /* User Info Styles */
+    .user-info {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 12px;
+      border-radius: 25px;
+      backdrop-filter: blur(10px);
+    }
+
+    .user-details {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .user-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .user-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      line-height: 1;
+    }
+
+    .user-status {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1;
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 12px;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .logout-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Hide status badge when user info is shown */
+    .user-info:not(.hidden) ~ .status-badge {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1><i class="fas fa-leaf"></i> CarbonVoid</h1>
+    <div class="status-badge" id="statusBadge">Active</div>
+    
+    <!-- User Info Section (hidden by default, shown when authenticated) -->
+    <div id="userInfo" class="user-info hidden">
+      <div class="user-details">
+        <img id="userAvatar" class="user-avatar" src="" alt="User Avatar">
+        <div class="user-text">
+          <span id="userName" class="user-name">User Name</span>
+          <span class="user-status">Signed in</span>
+        </div>
+      </div>
+      <button id="logoutBtn" class="logout-btn" title="Sign out">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Authentication UI (hidden by default) -->
+  <div id="authUI" class="auth-container hidden">
+    <div class="auth-card">
+      <div class="auth-header">
+        <i class="fas fa-leaf auth-icon"></i>
+        <h2>Welcome to CarbonVoid</h2>
+        <p>Sign in to track your digital carbon footprint and get personalized insights.</p>
+      </div>
+      
+      <button id="googleAuthBtn" class="google-auth-btn">
+        <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign in with Google
+      </button>
+      
+      <div id="errorMessage" class="error-message" style="display: none;">
+        Authentication failed. Please try again.
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="appUI">
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard"><i class="fas fa-home"></i> Dashboard</div>
+      <div class="tab" data-tab="email"><i class="fas fa-envelope"></i> Email</div>
+      <div class="tab" data-tab="streaming"><i class="fas fa-video"></i> Streaming</div>
+      <div class="tab" data-tab="settings"><i class="fas fa-cog"></i> Settings</div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div class="tab-content active" id="dashboardTab">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-tachometer-alt"></i> Overview</div>
+        </div>
+        
+        <div class="streaming-stats">
+          <div class="streaming-stat">
+            <div class="streaming-value" id="totalCarbon">0g</div>
+            <div class="streaming-label">Total CO₂</div>
+          </div>
+          <div class="streaming-stat">
+            <div class="streaming-value" id="emailCount">0</div>
+            <div class="streaming-label">Emails</div>
+          </div>
+          <div class="streaming-stat">
+            <div class="streaming-value" id="streamingTime">0m</div>
+            <div class="streaming-label">Streaming mins</div>
+          </div>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-header">
+            <span>Daily Carbon Goal</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <button class="btn" id="viewReportBtn">
+          <i class="fas fa-chart-bar"></i> View Full Report
+        </button>
+      </div>
+
+      <!-- Live Session Monitoring -->
+      <div class="card" id="liveSessionCard" style="display: none;">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-broadcast-tower"></i> Live Session</div>
+          <span class="live-badge">LIVE</span>
+        </div>
+        
+        <div class="live-session">
+          <div class="session-header">
+            <div class="platform-item">
+              <div class="platform-icon" id="livePlatformIcon">🎥</div>
+              <span id="livePlatformName">Unknown Platform</span>
+            </div>
+            <div class="streaming-value" id="liveDuration">0m</div>
+          </div>
+          
+          <div class="session-stats">
+            <div class="session-stat">
+              <div class="streaming-value" id="liveCarbon">0g</div>
+              <div class="streaming-label">CO₂ Emitted</div>
+            </div>
+            <div class="session-stat">
+              <div class="streaming-value" id="liveBitrate">0 Mbps</div>
+              <div class="streaming-label">Bitrate</div>
+            </div>
+          </div>
+          
+          <button class="btn btn-danger" id="stopMonitoringBtn">
+            <i class="fas fa-stop"></i> Stop Monitoring
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+        </div>
+        
+        <button class="btn" id="startMonitoringBtn">
+          <i class="fas fa-play"></i> Start Monitoring
+        </button>
+        
+        <button class="btn-secondary" id="analyzeBtn">
+          <i class="fas fa-chart-pie"></i> Analyze Impact
+        </button>
+        
+        <button class="btn-secondary" id="refreshAllBtn">
+          <i class="fas fa-sync-alt"></i> Refresh All Data
+        </button>
+        
+        <button class="btn" id="suggestionsBtn">
+          <i class="fas fa-lightbulb"></i> View Suggestions
+        </button>
+      </div>
+    </div>
+
+    <!-- Email Tab -->
+    <div class="tab-content" id="emailTab">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-envelope"></i> Email Analysis</div>
+        </div>
+        
+        <div class="stat-container">
+          <div id="unreadCount" class="stat">0</div>
+          <div class="carbon-impact">
+            <h3><i class="fas fa-cloud"></i> Carbon Impact</h3>
+            <div id="carbonStat" class="carbon-stat">0g</div>
+          </div>
+        </div>
+        
+        <div class="progress-container">
+          <div class="progress-header">
+            <span>Inbox Goal Progress</span>
+            <span id="emailProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="emailProgressFill" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <button class="btn" id="refreshEmailBtn">
+          <i class="fas fa-sync"></i> Refresh Email Data
+        </button>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-folder"></i> Email Categories</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <i class="fas fa-inbox"></i> Primary
+          </div>
+          <div class="category-badge">0</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <i class="fas fa-tag"></i> Promotions
+          </div>
+          <div class="category-badge">0</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <i class="fas fa-users"></i> Social
+          </div>
+          <div class="category-badge">0</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <i class="fas fa-bell"></i> Updates
+          </div>
+          <div class="category-badge">0</div>
+        </div>
+        
+        <div class="category">
+          <div class="category-name">
+            <i class="fas fa-comments"></i> Forums
+          </div>
+          <div class="category-badge">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streaming Tab -->
+    <div class="tab-content" id="streamingTab">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-video"></i> Streaming & Calls Monitor</div>
+        </div>
+        
+        <div class="platform-grid">
+          <div class="platform-item" data-platform="youtube">
+            <div class="platform-icon"><i class="fab fa-youtube"></i></div>
+            <span>YouTube</span>
+          </div>
+          <div class="platform-item" data-platform="netflix">
+            <div class="platform-icon"><i class="fas fa-film"></i></div>
+            <span>Netflix</span>
+          </div>
+          <div class="platform-item" data-platform="zoom">
+            <div class="platform-icon"><i class="fas fa-video"></i></div>
+            <span>Zoom</span>
+          </div>
+          <div class="platform-item" data-platform="teams">
+            <div class="platform-icon"><i class="fas fa-users"></i></div>
+            <span>Teams</span>
+          </div>
+          <div class="platform-item" data-platform="meet">
+            <div class="platform-icon"><i class="fas fa-video"></i></div>
+            <span>Google Meet</span>
+          </div>
+          <div class="platform-item" data-platform="webex">
+            <div class="platform-icon"><i class="fas fa-comments"></i></div>
+            <span>Webex</span>
+          </div>
+        </div>
+
+        <div class="streaming-stats">
+          <div class="streaming-stat">
+            <div class="streaming-value" id="streamingMinutes">0</div>
+            <div class="streaming-label">Minutes</div>
+          </div>
+          <div class="streaming-stat">
+            <div class="streaming-value" id="streamingEnergy">0.00</div>
+            <div class="streaming-label">Energy (kWh)</div>
+          </div>
+          <div class="streaming-stat">
+            <div class="streaming-value" id="streamingCarbon">0</div>
+            <div class="streaming-label">CO₂ (g)</div>
+          </div>
+        </div>
+
+        <div class="progress-container">
+      <div class="progress-header">
+            <span>Daily Streaming Limit</span>
+            <span id="streamingProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="streamingProgressFill" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <button class="btn" id="refreshStreamingBtn">
+          <i class="fas fa-sync"></i> Refresh Streaming Data
+        </button>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-lightbulb"></i> Carbon Saving Tips</div>
+        </div>
+        
+        <div class="suggestions">
+          <div class="suggestion-item">
+            <div class="suggestion-icon">🎧</div>
+            <div class="suggestion-content">
+              <strong>Use audio-only for calls when possible</strong>
+              <p>Potential savings: Up to 80% reduction in carbon footprint</p>
+            </div>
+          </div>
+          
+          <div class="suggestion-item">
+            <div class="suggestion-icon">⚙️</div>
+            <div class="suggestion-content">
+              <strong>Reduce streaming quality from HD to SD</strong>
+              <p>Saves 40-60% energy consumption</p>
+            </div>
+          </div>
+          
+          <div class="suggestion-item">
+            <div class="suggestion-icon">⏰</div>
+            <div class="suggestion-content">
+              <strong>Take regular breaks from streaming</strong>
+              <p>Reduces continuous energy usage</p>
+            </div>
+          </div>
+        </div>
+        
+        <button class="btn-secondary" id="audioSuggestionBtn">
+          <i class="fas fa-volume-up"></i> Suggest Audio for Active Calls
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settingsTab">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-cog"></i> Monitoring Settings</div>
+        </div>
+        
+        <div class="setting-item">
+          <label class="setting-label">Auto-detect streaming sessions</label>
+          <label class="switch">
+            <input type="checkbox" id="autoDetect" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <label class="setting-label">Show desktop notifications</label>
+          <label class="switch">
+            <input type="checkbox" id="desktopNotifications" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <label class="setting-label">Track carbon impact in real-time</label>
+          <label class="switch">
+            <input type="checkbox" id="realTimeTracking" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-bullseye"></i> Carbon Goals</div>
+        </div>
+        
+        <div class="setting-item">
+          <label class="setting-label">Daily carbon limit</label>
+          <div class="category-badge" id="carbonLimitBadge">500g CO₂</div>
+        </div>
+        
+        <div class="setting-item">
+          <label class="setting-label">Streaming time alert</label>
+          <div class="category-badge" id="streamingAlertBadge">120min</div>
+        </div>
+        
+        <button class="btn-secondary" id="customizeGoalsBtn">
+          <i class="fas fa-edit"></i> Customize Goals
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <i class="fas fa-leaf"></i> Reducing digital carbon footprint in real-time
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
